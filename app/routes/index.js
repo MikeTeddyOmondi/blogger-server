@@ -25,8 +25,13 @@ router.get('/api/blogs', async(req, res) => {
     res.json(articles)
 })
 
-// API - Post Subscribers' Contact Info
+// API - Post Contacts
 router.post('/api/contacts', async(req, res) => {
+    console.log(req.body)
+})
+
+// API - Post Subscribers
+router.post('/api/subscribers', async(req, res) => {
     console.log(req.body)
 })
 
