@@ -1,12 +1,12 @@
 const express = require('express')
-const Article = require('../models/article')
+const Draft = require('../models/Drafts')
 const Trash = require('../models/Trash')
 const { ensureAuthenticated } = require('../config/auth');
 const router = express.Router()
 
 // All Posts
 router.get('/posts', ensureAuthenticated, async(req, res) => {
-    const articles = await Article.find().sort({ createdAt: 'desc' })
+    const articles = await Draft.find().sort({ createdAt: 'desc' })
     res.render('articles/posts', {
         title: 'All Posts',
         user: req.user,
@@ -29,7 +29,7 @@ router.get('/trash', ensureAuthenticated, async(req, res) => {
 // GET | New Post 
 router.get('/new', ensureAuthenticated, (req, res) => {
     res.render('articles/new', {
-        article: new Article(),
+        article: new Draft(),
         user: req.user,
         title: 'New Post',
         layout: './layouts/sidebarLayout'
@@ -38,7 +38,7 @@ router.get('/new', ensureAuthenticated, (req, res) => {
 
 // GET | Edit Post
 router.get('/edit/:id', ensureAuthenticated, async(req, res) => {
-    const article = await Article.findById(req.params.id) || await Trash.findById(req.params.id)
+    const article = await Draft.findById(req.params.id) || await Trash.findById(req.params.id)
     res.render('articles/edit', {
         article: article,
         user: req.user,
@@ -49,7 +49,7 @@ router.get('/edit/:id', ensureAuthenticated, async(req, res) => {
 
 // Show | Single Post 
 router.get('/:slug', ensureAuthenticated, async(req, res) => {
-    const article = await Article.findOne({ slug: req.params.slug }) || await Trash.findOne({ slug: req.params.slug })
+    const article = await Draft.findOne({ slug: req.params.slug }) || await Trash.findOne({ slug: req.params.slug })
     if (article == null) res.redirect('/')
     res.render('articles/show', {
         article: article,
@@ -61,13 +61,13 @@ router.get('/:slug', ensureAuthenticated, async(req, res) => {
 
 // POST | New Post
 router.post('/', ensureAuthenticated, async(req, res, next) => {
-    req.article = new Article()
+    req.article = new Draft()
     next()
 }, saveArticleAndRedirect('new'))
 
 // PUT | Edit Post
 router.put('/:id', ensureAuthenticated, async(req, res, next) => {
-    req.article = await Article.findById(req.params.id) || await Trash.findById(req.params.id)
+    req.article = await Draft.findById(req.params.id) || await Trash.findById(req.params.id)
     next()
 }, saveArticleAndRedirect('edit'))
 
@@ -79,7 +79,7 @@ router.post('/restore/:id', ensureAuthenticated, async(req, res, next) => {
 
 //  DELETE | Single POST | Save to Trash
 router.delete('/:id', ensureAuthenticated, async(req, res, next) => {
-    let article = await Article.findById(req.params.id)
+    let article = await Draft.findById(req.params.id)
     try {
         let articleToTrash = new Trash({
             _id: article._id,
@@ -89,10 +89,10 @@ router.delete('/:id', ensureAuthenticated, async(req, res, next) => {
             markdown: article.markdown
         })
         await articleToTrash.save()
-        await Article.findByIdAndDelete(article)
+        await Draft.findByIdAndDelete(article)
         req.flash(
             'success_msg',
-            'You deleted the post successfully to the trash...'
+            'You deleted the draft post successfully to the trash...'
         );
         res.redirect('/articles/posts')
     } catch (err) {
@@ -135,12 +135,12 @@ function saveArticleAndRedirect(path) {
             if (path === 'new') {
                 req.flash(
                     'success_msg',
-                    'Great! You published a new post...'
+                    'Great! You drafted a new post...'
                 );
             } else {
                 req.flash(
                     'success_msg',
-                    'You edited the post successfully...'
+                    'You edited the draft post successfully...'
                 );
             }
             res.redirect(`/articles/${article.slug}`)
@@ -165,11 +165,12 @@ function restoreArticle() {
     return async(req, res) => {
         let article = req.article
 
-        const restoredArticle = new Article({
+        const restoredArticle = new Draft({
             _id: article._id,
             title: article.title,
             description: article.description,
-            markdown: article.markdown
+            markdown: article.markdown,
+            createdAt: article.createdAt,
         })
 
         try {

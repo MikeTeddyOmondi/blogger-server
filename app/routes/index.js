@@ -1,10 +1,11 @@
 const express = require('express');
 const router = express.Router();
-const Article = require('../models/article')
+const Article = require('../models/Drafts')
 const Contact = require('../models/Contact')
 const Subscriber = require('../models/Subscriber')
 const { ensureAuthenticated, forwardAuthenticated } = require('../config/auth');
-const sendMail = require('../config/mailer')
+const { sendMail, autoContactMail, autoSubscribeMail } = require('../config/mailer')
+    //const paginatedResults = require('../config/pagination')
 
 // Welcome Page
 router.get('/', forwardAuthenticated, (req, res) => res.render('welcome', {
@@ -24,8 +25,30 @@ router.get('/dashboard', ensureAuthenticated, async(req, res) => {
 
 // API - Get All Blogs
 router.get('/api/blogs', async(req, res) => {
-    const articles = await Article.find().sort({ createdAt: 'desc' })
-    res.json(articles)
+    try {
+        const articles = await Article.find().sort({ createdAt: 'desc' })
+        res.status(200).json(articles)
+    } catch (error) {
+        console.log(error.message)
+        res.status(404).json({ Error: "Not Found" })
+    }
+})
+
+// API - Get Specific Blog
+router.get('/api/blogs/:id', async(req, res) => {
+    let { id } = req.params
+    try {
+        if (id.match(/^[0-9a-fA-F]{24}$/)) {
+            const article = await Article.findById({ _id: id })
+            console.log(article)
+            res.status(200).json(article)
+        } else {
+            console.log(`Bad request | Blog id > ${id} was not found`)
+        }
+    } catch (error) {
+        console.log(error)
+        res.status(400).json({ Error: error })
+    }
 })
 
 // API - Post Contacts
@@ -45,19 +68,34 @@ router.post('/api/contacts', async(req, res) => {
     contact.save()
         .then(contact => {
             res.status(200).json({
-                success: `Saved a new contact: ${contact}`
+                success: `
+                            Saved a new contact: ${ contact }
+                            `
             })
         })
         .catch(err => {
-            res.status(500).json({ error: `Error occurred: ${err.message}` })
+            res.status(500).json({
+                error: `Error occurred: ${ err.message }`
+            })
         })
 
     sendMail(mail_body)
         .then((emailSent) => {
-            console.log(`${emailSent.response}`)
             console.log('Email sent to:', emailSent.envelope.to)
         })
-        .catch((error) => console.log(`Error occurred while sending the contact email: ${error.message}`))
+        .catch((error) => console.log(`
+                                    Error occurred
+                                    while sending the contact email: $ { error.message }
+                                    `))
+
+    autoContactMail(mail_body)
+        .then((emailSent) => {
+            console.log('Automatic email sent to:', emailSent.envelope.to)
+        })
+        .catch((error) => console.log(`
+                                    Error occurred
+                                    while sending the automatic email to the subscriber: $ { error.message }
+                                    `))
 })
 
 // API - Post Subscribers
@@ -76,23 +114,34 @@ router.post('/api/subscribers', async(req, res) => {
         .then(subscriber => {
             res.status(200).json({
                 success: `
-                        Saved a new subscriber: ${ subscriber }
-                        `
+                                    Saved a new subscriber: $ { subscriber }
+                                    `
             })
         })
         .catch(err => {
             res.status(500).json({ error: `
-                        Error occurred
-                        while saving a subscriber: ${ err.message }
-                        ` })
+                                    Error occurred
+                                    while saving a subscriber: $ { err.message }
+                                    ` })
         })
 
     sendMail(mail_body)
         .then((emailSent) => {
-            //console.log(`${ emailSent.response }`)
             console.log('Email sent to:', emailSent.envelope.to)
         })
-        .catch((error) => console.log(`Error occurred while sending the subscriber email: ${error.message}`))
+        .catch((error) => console.log(`
+                                    Error occurred
+                                    while sending the subscriber email: $ { error.message }
+                                    `))
+
+    autoSubscribeMail(mail_body)
+        .then((emailSent) => {
+            console.log('Automatic email sent to:', emailSent.envelope.to)
+        })
+        .catch((error) => console.log(`
+                                    Error occurred
+                                    while sending the automatic email to the subscriber: $ { error.message }
+                                    `))
 })
 
 module.exports = router;
