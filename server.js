@@ -5,8 +5,9 @@ const flash = require('connect-flash')
 const session = require('express-session')
 const methodOverride = require('method-override')
 const expressLayouts = require('express-ejs-layouts');
-const userRouter = require('./app/routes/users.js')
-const indexRouter = require('./app/routes/index.js')
+const apiRouter = require('./app/routes/api/api')
+const userRouter = require('./app/routes/users')
+const indexRouter = require('./app/routes/index')
 const articleRouter = require('./app/routes/articles')
 const path = require('path')
 const crypto = require('crypto')
@@ -77,6 +78,7 @@ app.use(function(req, res, next) {
 
 // Routes
 app.use('/', indexRouter);
+app.use('/api/v1', apiRouter);
 app.use('/users', userRouter);
 app.use('/articles', articleRouter)
 

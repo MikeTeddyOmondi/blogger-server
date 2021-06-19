@@ -15,6 +15,17 @@ router.get('/posts', ensureAuthenticated, async(req, res) => {
     })
 });
 
+// All Published Posts
+router.get('/published', ensureAuthenticated, async(req, res) => {
+    const articles = await Draft.find().sort({ createdAt: 'desc' })
+    res.render('articles/published', {
+        title: 'All Published Posts',
+        user: req.user,
+        articles: articles,
+        layout: './layouts/sidebarLayout'
+    })
+})
+
 // Trash | Posts
 router.get('/trash', ensureAuthenticated, async(req, res) => {
     const deletedArticles = await Trash.find().sort({ createdAt: 'desc' })
