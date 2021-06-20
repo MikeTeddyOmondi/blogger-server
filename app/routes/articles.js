@@ -8,7 +8,7 @@ const router = express.Router()
 router.get('/posts', ensureAuthenticated, async(req, res) => {
     const articles = await Draft.find().sort({ createdAt: 'desc' })
     res.render('articles/posts', {
-        title: 'All Posts',
+        title: 'Draft Posts',
         user: req.user,
         articles: articles,
         layout: './layouts/sidebarLayout'
@@ -19,7 +19,7 @@ router.get('/posts', ensureAuthenticated, async(req, res) => {
 router.get('/published', ensureAuthenticated, async(req, res) => {
     const articles = await Draft.find().sort({ createdAt: 'desc' })
     res.render('articles/published', {
-        title: 'All Published Posts',
+        title: 'Published Posts',
         user: req.user,
         articles: articles,
         layout: './layouts/sidebarLayout'

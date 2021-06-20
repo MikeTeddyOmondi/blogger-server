@@ -38,6 +38,26 @@ router.get('/messages', ensureAuthenticated, async(req, res) => {
     })
 });
 
+// Messages | Compose 
+router.get('/messages/compose', ensureAuthenticated, async(req, res) => {
+    let current_user = req.user
+    res.render('admin/message-compose', {
+        title: 'Compose Message',
+        user: current_user,
+        layout: './layouts/sidebarLayout'
+    })
+});
+
+// Messages | Read 
+router.get('/messages/read', ensureAuthenticated, async(req, res) => {
+    let current_user = req.user
+    res.render('admin/message-read', {
+        title: 'Read Message',
+        user: current_user,
+        layout: './layouts/sidebarLayout'
+    })
+});
+
 // Notifications
 router.get('/notifications', ensureAuthenticated, async(req, res) => {
     let current_user = req.user
